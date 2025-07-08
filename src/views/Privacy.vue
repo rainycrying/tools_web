@@ -19,7 +19,7 @@
       <p>本平台完全开源，代码可审计。您可以在我们的GitHub仓库查看所有源代码。</p>
 
       <h2>联系方式</h2>
-      <p>如有任何隐私相关问题，请联系：privacy@hashtools.example.com</p>
+      <p>如有任何隐私相关问题，请联系：privacy@rainycrying.com</p>
     </div>
 
     <div class="back-home">

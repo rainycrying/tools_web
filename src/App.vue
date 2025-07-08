@@ -1,5 +1,5 @@
 <template>
-  <div id="app" :class="{ 'dark-mode': isDarkMode, [`scheme-${currentScheme}`]: isDarkMode }">
+  <div id="app" :class="{ 'dark-mode': isDarkMode }">
     <nav>
         <router-link to="/">首页</router-link>
         <router-link to="/hash-service">Hash计算</router-link>
@@ -10,23 +10,11 @@
         <router-link to="/privacy">隐私协议</router-link>   
       <button class="mode-toggle" @click="toggleDarkMode">{{ isDarkMode ? '日间模式' : '夜间模式' }}</button>
     </nav>
-    <router-view/>
-    
-    <div v-if="isDarkMode" class="scheme-selector">
-      <button 
-        v-for="scheme in availableSchemes" 
-        :key="scheme"
-        :class="{ active: currentScheme === scheme }"
-        @click="changeColorScheme(scheme)"
-      >
-        {{ getSchemeName(scheme) }}
-      </button>
+    <router-view class="router-view"/>
     </div>
-  </div>
 </template>
 
 <script>
-import { setColorScheme, getCurrentScheme, SCHEMES } from './utils/colorScheme';
 import { RouterLink, RouterView } from 'vue-router';
 
 export default {
@@ -37,30 +25,13 @@ export default {
   },
   data() {
     return {
-      isDarkMode: false,
-      currentScheme: SCHEMES.DEFAULT,
-      availableSchemes: Object.values(SCHEMES)
+      isDarkMode: false
     }
   },
   methods: {
     toggleDarkMode() {
       this.isDarkMode = !this.isDarkMode;
       localStorage.setItem('darkMode', this.isDarkMode);
-      if (!this.isDarkMode) {
-        this.currentScheme = SCHEMES.DEFAULT;
-      }
-    },
-    changeColorScheme(scheme) {
-      this.currentScheme = scheme;
-      setColorScheme(scheme);
-    },
-    getSchemeName(scheme) {
-      const names = {
-        [SCHEMES.DEFAULT]: '标准',
-        [SCHEMES.BLUE]: '深蓝',
-        [SCHEMES.WARM]: '暖色'
-      };
-      return names[scheme];
     }
   },
   created() {
@@ -68,9 +39,6 @@ export default {
     if (savedMode !== null) {
       this.isDarkMode = JSON.parse(savedMode);
     }
-    
-    this.currentScheme = getCurrentScheme();
-    setColorScheme(this.currentScheme);
   }
 }
 </script>
@@ -85,31 +53,31 @@ export default {
   --border-color: #dddddd;
 }
 
-/* 方案1: 深灰背景 + 浅灰文字 (默认方案) */
 .dark-mode {
-  --background-color: #121212; /* 深灰 */
-  --text-color: #e0e0e0; /* 浅灰 */
-  --card-background: #1e1e1e; /* 中灰 */
-  --border-color: #333333; /* 深灰 */
-  /* 对比度: 12.6:1 (符合AAA标准) */
+  --background-color: #121212;
+  --text-color: #e0e0e0;
+  --card-background: #1e1e1e;
+  --border-color: #333333;
+  --input-background: #252525;
+  --hover-color: #2d2d2d;
 }
 
-/* 方案2: 深蓝背景 + 米白文字 */
-.dark-mode.scheme-blue {
-  --background-color: #0A1929; /* 深蓝 */
-  --text-color: #F5F5F0; /* 米白 */
-  --card-background: #1A2B3C; /* 中蓝灰 */
-  --border-color: #2A3B4C; /* 蓝灰 */
-  /* 对比度: 10.3:1 (符合AAA标准) */
+/* 确保所有背景元素使用正确的变量 */
+.dark-mode body,
+.dark-mode #app,
+.dark-mode .home,
+.dark-mode .tool-cards,
+.dark-mode .tool-card,
+.dark-mode .features,
+.dark-mode .feature-card,
+.dark-mode .stats {
+  background-color: var(--background-color);
 }
 
-/* 方案3: 暖灰背景 + 浅黄文字 */
-.dark-mode.scheme-warm {
-  --background-color: #1A1A1A; /* 暖灰 */
-  --text-color: #F0E6D2; /* 浅黄 */
-  --card-background: #2A2A2A; /* 中暖灰 */
-  --border-color: #3A3A3A; /* 暖灰 */
-  /* 对比度: 8.7:1 (符合AA标准) */
+.dark-mode .card,
+.dark-mode nav,
+.dark-mode .scheme-selector {
+  background-color: var(--card-background);
 }
 
 .dark-mode p,
@@ -143,42 +111,6 @@ export default {
   text-shadow: 0 0 1px rgba(0,0,0,0.3);
 }
 
-/* 方案选择器样式 */
-.scheme-selector {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 1000;
-  display: flex;
-  gap: 8px;
-  background-color: var(--card-background);
-  padding: 8px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
-
-.scheme-selector button {
-  padding: 8px 12px;
-  background-color: var(--card-background);
-  color: var(--text-color);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.scheme-selector button:hover {
-  background-color: var(--primary-color);
-  color: white;
-  border-color: var(--primary-color);
-}
-
-.scheme-selector button.active {
-  background-color: var(--primary-color);
-  color: white;
-  border-color: var(--primary-color);
-}
-
 body {
   margin: 0;
   padding: 0;
@@ -186,6 +118,35 @@ body {
   color: var(--text-color);
   transition: background-color 0.3s, color 0.3s;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 100vh;
+}
+
+/* Force dark background for html element */
+html {
+  background-color: var(--background-color);
+}
+
+#app {
+  background-color: var(--background-color);
+  min-height: 100vh;
+}
+
+.router-view {
+  background-color: var(--background-color);
+  padding: 20px;
+  min-height: calc(100vh - 60px);
+}
+
+.router-view > * {
+  background-color: var(--card-background);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode .router-view > * {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 a {
@@ -229,14 +190,18 @@ nav a:hover {
 }
 
 /* 全局表单元素样式 */
-input, textarea, select, button {
+input, textarea, select, button:not(.mode-toggle) {
   font-family: inherit;
   font-size: inherit;
   color: var(--text-color);
-  background-color: var(--card-background);
+  background-color: var(--input-background);
   border: 1px solid var(--border-color);
   border-radius: 4px;
   transition: all 0.3s;
+}
+
+button:not(.mode-toggle):hover {
+  background-color: var(--hover-color);
 }
 
 input:focus, textarea:focus, select:focus {
@@ -256,14 +221,25 @@ input:focus, textarea:focus, select:focus {
 
 /* Hash服务组件专用样式 */
 .hash-service .input-section textarea {
-  background-color: var(--card-background);
+  background-color: var(--input-background);
   border: 1px solid var(--border-color);
+  color: var(--text-color);
+  width: 100%;
+  min-height: 120px;
+  padding: 10px;
 }
 
 .hash-service .hash-options button {
-  background-color: var(--card-background);
+  background-color: var(--input-background);
   color: var(--text-color);
   border: 1px solid var(--border-color);
+  margin-right: 8px;
+  padding: 6px 12px;
+  transition: all 0.2s;
+}
+
+.hash-service .hash-options button:hover {
+  background-color: var(--hover-color);
 }
 
 .hash-service .hash-options button.active {
@@ -285,10 +261,16 @@ input:focus, textarea:focus, select:focus {
 }
 
 .hash-service .result-value {
-  background-color: var(--card-background);
+  background-color: var(--input-background);
   border-left: 4px solid var(--primary-color);
   border: 1px solid var(--border-color);
   color: var(--text-color);
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 4px;
+  word-break: break-all;
+  font-family: monospace;
+  font-size: 0.9em;
 }
 
 .hash-service .copy-btn {
