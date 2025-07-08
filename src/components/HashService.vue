@@ -88,11 +88,11 @@ export default {
     copyToClipboard(text) {
       navigator.clipboard.writeText(text)
         .then(() => {
-          alert('已成功复制到剪贴板');
+          console.log('已成功复制到剪贴板');
         })
         .catch(err => {
           console.error('复制失败:', err);
-          alert('复制失败，请手动复制');
+          console.log('复制失败，请手动复制');
         });
     }
   }

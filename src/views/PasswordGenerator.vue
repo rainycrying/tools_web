@@ -88,7 +88,7 @@ export default {
       }
 
       if (!chars) {
-        alert('请至少选择一种字符类型');
+        console.log('请至少选择一种字符类型');
         return;
       }
 
@@ -103,7 +103,7 @@ export default {
     },
     copyPassword(password) {
       navigator.clipboard.writeText(password);
-      alert('密码已复制');
+      console.log('密码已复制');
     },
   }
 }

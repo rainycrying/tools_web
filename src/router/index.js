@@ -54,6 +54,14 @@ const routes = [
     meta: {
       title: '密码生成器'
     }
+  },
+  {
+    path: '/curl-converter',
+    name: 'CurlConverter',
+    component: () => import('../views/CurlConverter.vue'),
+    meta: {
+      title: 'Curl命令转换'
+    }
   }
 ]
 

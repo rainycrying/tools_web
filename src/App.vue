@@ -7,6 +7,7 @@
         <router-link to="/base64">Base64工具</router-link>
         <router-link to="/json">JSON工具</router-link>
         <router-link to="/password">密码生成</router-link>
+        <router-link to="/curl-converter">Curl转换</router-link>
         <router-link to="/privacy">隐私协议</router-link>   
       <button class="mode-toggle" @click="toggleDarkMode">{{ isDarkMode ? '日间模式' : '夜间模式' }}</button>
     </nav>
