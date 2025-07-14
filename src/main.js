@@ -1,12 +1,9 @@
+// src/main.ts
 import { createApp } from 'vue'
 import App from './App.vue'
-import router from './router'
+// 引入 Naive UI 插件
+import naive from 'naive-ui'
 
-const app = createApp(App)
-
-// 设置Vue生产环境特性标志
-app.config.globalProperties.__VUE_PROD_HYDRATION_MISMATCH_DETAILS__ = true
-
-app
-  .use(router)
-  .mount('#app')
+createApp(App)
+    .use(naive) // ✅ 注册 Naive UI
+    .mount('#app')
