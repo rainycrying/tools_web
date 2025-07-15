@@ -15,6 +15,12 @@ const handleClick = () => {
 
 <template>
 
+    <!-- ✅ 首页按钮 -->
+    <router-link to="/" class="router-link">
+      <n-button type="tertiary" class="home-tertiary-button">
+        首页
+      </n-button>
+    </router-link>
     <n-tooltip trigger="hover" >
       <template #trigger>
         <n-button @click="handleClick" quaternary circle class="theme-toggle-button">
