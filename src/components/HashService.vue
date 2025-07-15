@@ -1,99 +1,79 @@
 <template>
   <div class="hash-service">
     <h1>Hash 计算服务</h1>
-    <p class="description">支持多种哈希算法的在线计算服务，实时显示计算结果。</p>
+    <p class="description">输入文本后，实时计算并展示 MD5、SHA-1、SHA-256、SHA-512 哈希值。</p>
 
     <div class="input-section">
       <textarea
           v-model="inputText"
           placeholder="输入要计算Hash的文本"
-          @input="onInput"
       ></textarea>
     </div>
 
-    <div class="hash-options">
-      <button
-          v-for="hash in hashAlgorithms"
-          :key="hash"
-          @click="calculateHash(hash)"
-          :class="{ 'active': activeHash === hash }"
-      >
-        {{ hash.toUpperCase() }}
-      </button>
-    </div>
-
-    <div v-if="isLoading" class="loading">
-      正在计算Hash，请稍候...
-    </div>
-
-    <div v-else class="result-section">
-      <h2>计算结果</h2>
-      <div v-for="(value, key) in hashResults" :key="key" class="result-item">
-        <div class="result-label">{{ key }}:</div>
-        <div class="result-value">{{ value }}</div>
-        <button class="copy-btn" @click="copyToClipboard(value)">复制</button>
+    <div class="result-section">
+      <div class="result-item" v-for="(hash, algo) in hashes" :key="algo">
+        <div class="result-label">{{ algo }}:</div>
+        <div class="result-value">{{ hash }}</div>
+        <button class="copy-btn" @click="copyToClipboard(hash)">复制</button>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import { watch } from 'vue'
+import CryptoJS from 'crypto-js'
+
 export default {
   name: 'HashService',
   data() {
     return {
       inputText: '',
-      hashResults: {},
-      isLoading: false,
-      hashAlgorithms: ['md5', 'sha1', 'sha256', 'sha512'],
-      activeHash: null,
-      debouncedCalculate: null
+      hashes: {
+        MD5: '',
+        SHA1: '',
+        SHA256: '',
+        SHA512: ''
+      }
     }
   },
   methods: {
-    onInput() {
-      if (this.inputText && this.activeHash) {
-        this.calculateHash(this.activeHash);
-      }
-    },
-
-    async calculateHash(hashType) {
-      this.activeHash = hashType;
-      this.isLoading = true;
-
+    calculateHashes() {
       if (!this.inputText) {
-        this.hashResults = {};
-        this.isLoading = false;
-        return;
+        this.resetHashes()
+        return
       }
 
-      try {
-        const encoder = new TextEncoder();
-        const data = encoder.encode(this.inputText);
-        const hashBuffer = await crypto.subtle.digest(hashType, data);
-
-        // 将ArrayBuffer转换为十六进制字符串
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-        this.$set(this.hashResults, hashType.toUpperCase(), hashHex);
-      } catch (error) {
-        console.error(`计算${hashType}失败:`, error);
-        this.$set(this.hashResults, hashType.toUpperCase(), '计算失败');
-      } finally {
-        this.isLoading = false;
+      this.hashes = {
+        MD5: CryptoJS.MD5(this.inputText).toString(),
+        SHA1: CryptoJS.SHA1(this.inputText).toString(),
+        SHA256: CryptoJS.SHA256(this.inputText).toString(),
+        SHA512: CryptoJS.SHA512(this.inputText).toString()
       }
     },
-
-    copyToClipboard(text) {
-      navigator.clipboard.writeText(text)
-          .then(() => {
-            console.log('已成功复制到剪贴板');
-          })
-          .catch(err => {
-            console.error('复制失败:', err);
-            console.log('复制失败，请手动复制');
-          });
+    resetHashes() {
+      for (let algo in this.hashes) {
+        this.hashes[algo] = ''
+      }
+    },
+    async copyToClipboard(text) {
+      try {
+        await navigator.clipboard.writeText(text)
+      } catch (err) {
+        console.error('复制失败:', err)
+        const textarea = document.createElement('textarea')
+        textarea.value = text
+        document.body.appendChild(textarea)
+        textarea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textarea)
+      }
+    }
+  },
+  watch: {
+    inputText: {
+      handler: 'calculateHashes',
+      immediate: true
     }
   }
 }
@@ -101,115 +81,77 @@ export default {
 
 <style scoped>
 .hash-service {
-  max-width: 900px;
+  padding: 20px;
+  max-width: 800px;
   margin: 0 auto;
-  padding: 2rem;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.description {
-  font-size: 1.1rem;
-  color: #666;
-  margin-bottom: 2rem;
 }
 
 .input-section textarea {
   width: 100%;
-  height: 150px;
-  padding: 1rem;
-  font-size: 1rem;
-  border: 1px solid #ddd;
-  border-radius: 5px;
+  min-height: 120px;
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color, #ccc);
   resize: vertical;
-  transition: border-color 0.3s;
-}
-
-.input-section textarea:focus {
-  outline: none;
-  border-color: #42b883;
-  box-shadow: 0 0 0 2px rgba(66, 185, 131, 0.2);
-}
-
-.hash-options {
-  display: flex;
-  flex-wrap: wrap;
-  margin-bottom: 2rem;
-}
-
-.hash-options button {
-  padding: 0.5rem 1rem;
-  margin-right: 1rem;
-  margin-bottom: 1rem;
-  font-size: 1rem;
-  background-color: #f0f0f0;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.hash-options button.active {
-  background-color: #42b883;
-  color: white;
-}
-
-.hash-options button:hover {
-  background-color: #e0e0e0;
-}
-
-.loading {
-  padding: 2rem;
-  text-align: center;
-  color: #42b883;
-  font-weight: bold;
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.4;
 }
 
 .result-section {
-  background-color: #f8f8f8;
-  padding: 2rem;
-  border-radius: 8px;
-  border: 1px solid #eee;
+  border-top: 1px solid var(--border-color);
+  padding-top: 20px;
 }
 
 .result-item {
   display: flex;
-  flex-direction: column;
-  margin-bottom: 1.5rem;
-  word-break: break-all;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  line-height: 1.4;
 }
 
 .result-label {
+  width: 100px;
   font-weight: bold;
-  margin-bottom: 0.5rem;
-  color: #333;
 }
 
 .result-value {
-  padding: 0.8rem 1rem;
-  background-color: #fff;
-  border-left: 4px solid #42b883;
+  flex: 1;
+  padding: 6px 10px;
+  background-color: var(--card-background, #f5f5f5);
+  border-left: 4px solid var(--primary-color, #42b983);
+  word-break: break-all;
+  border-radius: 0 4px 4px 0;
   font-family: monospace;
-  font-size: 0.95rem;
-  border: 1px solid #eee;
-  border-radius: 4px;
-  overflow-x: auto;
+  font-size: 14px;
+  line-height: 1.3;
 }
 
 .copy-btn {
-  margin-top: 0.5rem;
-  padding: 0.4rem 0.8rem;
-  font-size: 0.9rem;
-  background-color: #42b883;
+  margin-left: 10px;
+  padding: 6px 10px;
+  background-color: var(--primary-color, #42b983);
   color: white;
   border: none;
-  border-radius: 3px;
+  border-radius: 4px;
   cursor: pointer;
-  align-self: flex-start;
-  transition: background-color 0.3s;
 }
 
 .copy-btn:hover {
-  background-color: #36986d;
+  background-color: var(--primary-hover, #369f77);
+}
+
+/* 夜间模式支持 */
+@media (prefers-color-scheme: dark) {
+  .result-value {
+    color: #e0e0e0;
+    background-color: #2d2d2d;
+  }
+
+  .input-section textarea {
+    background-color: #2d2d2d;
+    color: #e0e0e0;
+    border-color: #444;
+  }
 }
 </style>
-No newline at end of file

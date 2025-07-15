@@ -26,7 +26,7 @@
       </n-layout-sider>
       <!-- 右侧内容区，动态切换 -->
       <n-layout-content style="padding: 10px; overflow: auto;">
-        <Home/>
+        <component :is="currentView"/>
       </n-layout-content>
   </n-layout>
     <!-- 底部 -->
@@ -48,12 +48,14 @@ import { NConfigProvider, darkTheme, zhCN, dateZhCN } from 'naive-ui'
 
 // 主题状态：是否暗色模式
 const isDark = ref(false)
+const currentView = ref(Home)
 
 // 提供给子组件使用（比如 Header）
 provide('isDark', isDark)
 provide('toggleDark', () => {
   isDark.value = !isDark.value
 })
+provide('currentView', currentView)
 
 // 主题动态切换
 const theme = computed(() => isDark.value ? darkTheme : null)

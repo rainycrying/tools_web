@@ -27,11 +27,6 @@
         <h3>密码生成</h3>
         <p>生成安全随机密码</p>
       </a>
-      <a href="/privacy" class="tool-card">
-        <div class="tool-icon">📜</div>
-        <h3>隐私协议</h3>
-        <p>查看我们的隐私政策</p>
-      </a>
     </div>
 
     <div class="features">
