@@ -24,7 +24,10 @@
       >
         <SidebarLayout/>
       </n-layout-sider>
-      <Home/>
+      <!-- 右侧内容区，动态切换 -->
+      <n-layout-content style="padding: 10px; overflow: auto;">
+        <Home/>
+      </n-layout-content>
   </n-layout>
     <!-- 底部 -->
     <n-layout-footer
@@ -57,7 +60,6 @@ const theme = computed(() => isDark.value ? darkTheme : null)
 
 import Footer from "./components/Footer.vue";
 import Header from "./components/Header.vue";
-import Watermark from "./components/Watermark.vue";
 import SidebarLayout from "./components/SidebarLayout.vue";
 import Home from "./components/Home.vue";
 </script>
