@@ -14,7 +14,8 @@ import PrivacyPolicy from '../components/PrivacyPolicy.vue'
 const routes = [
     {
         path: '/',
-        redirect: '/home'
+        name: 'Home',
+        component: Home
     },
     {
         path: '/home',
@@ -50,7 +51,10 @@ const routes = [
         path: '/privacy',
         name: 'PrivacyPolicy',
         component: PrivacyPolicy
-    }
+    },{
+        path: '/:pathMatch(.*)*',  // 匹配所有未定义路径
+        redirect: '/home'              // 重定向到首页
+    },
 ]
 
 const router = createRouter({
