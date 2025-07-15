@@ -15,11 +15,6 @@ function renderIcon(icon: any) {
 
 const menuOptions: MenuOption[] = [
   {
-    label: '首页',
-    key: 'home',
-    icon: renderIcon(FileText)
-  },
-  {
     label: 'Hash计算',
     key: 'hash-service',
     icon: renderIcon(FileText)
