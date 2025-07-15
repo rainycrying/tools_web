@@ -3,8 +3,9 @@
 </template>
 
 <script lang="ts">
+import { useRouter } from 'vue-router'
 import type { MenuOption } from 'naive-ui'
-import { defineComponent, ref, inject, type Ref, markRaw } from 'vue'
+import { defineComponent, ref, inject, type Ref, markRaw ,onMounted} from 'vue'
 import { FileText } from '@vicons/tabler'
 import { NIcon } from 'naive-ui'
 import { h } from 'vue'
@@ -52,7 +53,7 @@ export default defineComponent({
     const activeKey = ref<string | null>(null)
 
     const currentView = inject<Ref<any>>('currentView')
-
+    const router = useRouter()
     // 选中菜单，切换视图
     async function handleMenuClick(key: string) {
       if (!currentView?.value) return
@@ -67,11 +68,19 @@ export default defineComponent({
           'password': (await import(/* @vite-ignore */ './PasswordGenerator.vue') as any).default,
           'privacy': (await import(/* @vite-ignore */ './PrivacyPolicy.vue') as any).default
         }[key])
+        await router.push({ path: `/${key}` })
       } catch (err) {
         console.error('Failed to load component:', err)
       }
     }
-
+// 页面首次加载，根据当前 URL 初始化视图
+    onMounted(async () => {
+      const path = router.currentRoute.value.path.replace('/', '')
+      if (path && Object.keys(menuOptions.map(o => o.key)).includes(path)) {
+        await handleMenuClick(path)
+        activeKey.value = path
+      }
+    })
     return {
       menuOptions,
       activeKey,
