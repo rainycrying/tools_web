@@ -4,7 +4,7 @@
 
 <script lang="ts">
 import type { MenuOption } from 'naive-ui'
-import { defineComponent, ref, inject, type Ref } from 'vue'
+import { defineComponent, ref, inject, type Ref, markRaw } from 'vue'
 import { FileText } from '@vicons/tabler'
 import { NIcon } from 'naive-ui'
 import { h } from 'vue'
@@ -63,15 +63,15 @@ export default defineComponent({
       if (!currentView?.value) return
       
       try {
-        currentView.value = {
-          'home': (await import('./Home.vue') as any).default,
-          'hash-service': (await import('./HashService.vue') as any).default,
-          'uuid-generator': (await import('./UuidGenerator.vue') as any).default,
-          'base64': (await import('./Base64Tool.vue') as any).default,
-          'json': (await import('./JsonTool.vue') as any).default,
-          'password': (await import('./PasswordGenerator.vue') as any).default,
-          'privacy': (await import('./PrivacyPolicy.vue') as any).default
-        }[key]
+        currentView.value = markRaw({
+          'home': (await import(/* @vite-ignore */ './Home.vue') as any).default,
+          'hash-service': (await import(/* @vite-ignore */ './HashService.vue') as any).default,
+          'uuid-generator': (await import(/* @vite-ignore */ './UuidGenerator.vue') as any).default,
+          'base64': (await import(/* @vite-ignore */ './Base64Tool.vue') as any).default,
+          'json': (await import(/* @vite-ignore */ './JsonTool.vue') as any).default,
+          'password': (await import(/* @vite-ignore */ './PasswordGenerator.vue') as any).default,
+          'privacy': (await import(/* @vite-ignore */ './PrivacyPolicy.vue') as any).default
+        }[key])
       } catch (err) {
         console.error('Failed to load component:', err)
       }

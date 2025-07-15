@@ -43,12 +43,12 @@
 </template>
 
 <script setup>
-import { ref, computed, provide } from 'vue'
+import { ref, computed, shallowRef, provide } from 'vue'
 import { NConfigProvider, darkTheme, zhCN, dateZhCN } from 'naive-ui'
 
 // 主题状态：是否暗色模式
 const isDark = ref(false)
-const currentView = ref(Home)
+const currentView = shallowRef(Home)  // ✅ 使用shallowRef替代ref避免组件响应式转换
 
 // 提供给子组件使用（比如 Header）
 provide('isDark', isDark)
