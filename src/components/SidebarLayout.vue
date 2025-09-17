@@ -7,15 +7,12 @@
 </template>
 
 <script lang="ts">
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import type { MenuOption } from 'naive-ui'
 import {
   defineComponent,
   ref,
-  inject,
-  type Ref,
-  markRaw,
-  onMounted,
+  watch,
   h
 } from 'vue'
 import { FileText } from '@vicons/tabler'
@@ -37,41 +34,20 @@ const menuOptions: MenuOption[] = [
 export default defineComponent({
   setup() {
     const activeKey = ref<string | null>(null)
-    const currentView = inject<Ref<any>>('currentView')
     const router = useRouter()
+    const route = useRoute()
 
-    async function handleMenuClick(key: string) {
-      if (!currentView?.value) return
-
-      try {
-        const views = {
-          home: (await import('./Home.vue')).default,
-          'hash-service': (await import('./HashService.vue')).default,
-          'uuid-generator': (await import('./UuidGenerator.vue')).default,
-          base64: (await import('./Base64Tool.vue')).default,
-          json: (await import('./JsonTool.vue')).default,
-          password: (await import('./PasswordGenerator.vue')).default,
-          privacy: (await import('./PrivacyPolicy.vue')).default
-        }
-
-        currentView.value = markRaw(views[key])
-        activeKey.value = key // 设置高亮菜单项
-        await router.push({ path: `/${key}` })
-      } catch (err) {
-        console.error('Failed to load component:', err)
-      }
+    function handleMenuClick(key: string) {
+      router.push({ path: `/${key}` })
     }
 
-    // 首次加载时，根据 URL 初始化
-    onMounted(async () => {
-      const path = router.currentRoute.value.path.replace('/', '')
-      const exists = menuOptions.some((item) => item.key === path)
-      if (exists) {
-        await handleMenuClick(path)
-      } else {
-        await handleMenuClick('hash-service') // 默认加载页面
+    // 监听路由变化，更新菜单高亮
+    watch(() => route.path, (newPath) => {
+      const pathKey = newPath.replace('/', '')
+      if (menuOptions.some(item => item.key === pathKey)) {
+        activeKey.value = pathKey
       }
-    })
+    }, { immediate: true })
 
     return {
       menuOptions,
