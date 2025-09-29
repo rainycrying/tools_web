@@ -1,157 +1,288 @@
 <template>
-  <div class="hash-service">
-    <h1>Hash 计算服务</h1>
-    <p class="description">输入文本后，实时计算并展示 MD5、SHA-1、SHA-256、SHA-512 哈希值。</p>
-
-    <div class="input-section">
-      <textarea
-          v-model="inputText"
-          placeholder="输入要计算Hash的文本"
-      ></textarea>
+  <div class="terminal-tool">
+    <!-- 工具标题和说明 -->
+    <div class="output">
+      <div class="success">Hash Service - 哈希计算工具</div>
+      <div class="info">支持算法: MD5, SHA1, SHA256, SHA512</div>
+      <div class="info">用法: hash [算法] [文本] 或 hash all [文本]</div>
+      <div class="info">示例: hash md5 hello 或 hash all password123</div>
+      <br>
     </div>
-
-    <div class="result-section">
-      <div class="result-item" v-for="(hash, algo) in hashes" :key="algo">
-        <div class="result-label">{{ algo }}:</div>
-        <div class="result-value">{{ hash }}</div>
-        <button class="copy-btn" @click="copyToClipboard(hash)">复制</button>
+    
+    <!-- 命令历史输出区域 -->
+    <div id="hash-output"></div>
+    
+    <!-- 命令行输入区域 -->
+    <div class="command-line">
+      <span class="prompt">hash-tool:~$</span>
+      <div class="input-container">
+        <input 
+          type="text" 
+          class="command-input" 
+          v-model="currentCommand" 
+          @keyup.enter="executeCommand"
+          @keydown.up="navigateHistoryUp"
+          @keydown.down="navigateHistoryDown"
+          @paste="handlePaste"
+          ref="commandInput"
+          inputmode="none"
+          placeholder="输入hash命令..."
+        />
+        <span class="cursor"></span>
       </div>
     </div>
   </div>
 </template>
 
-<script>
-import { watch } from 'vue'
+<script setup>
+import { ref, onMounted, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
 import CryptoJS from 'crypto-js'
 
-export default {
-  name: 'HashService',
-  data() {
-    return {
-      inputText: '',
-      hashes: {
-        MD5: '',
-        SHA1: '',
-        SHA256: '',
-        SHA512: ''
-      }
-    }
-  },
-  methods: {
-    calculateHashes() {
-      if (!this.inputText) {
-        this.resetHashes()
-        return
-      }
+const currentCommand = ref('')
+const commandInput = ref(null)
+const router = useRouter()
+const commandHistory = ref([])
+const historyIndex = ref(-1)
 
-      this.hashes = {
-        MD5: CryptoJS.MD5(this.inputText).toString(),
-        SHA1: CryptoJS.SHA1(this.inputText).toString(),
-        SHA256: CryptoJS.SHA256(this.inputText).toString(),
-        SHA512: CryptoJS.SHA512(this.inputText).toString()
-      }
-    },
-    resetHashes() {
-      for (let algo in this.hashes) {
-        this.hashes[algo] = ''
-      }
-    },
-    async copyToClipboard(text) {
-      try {
-        await navigator.clipboard.writeText(text)
-      } catch (err) {
-        console.error('复制失败:', err)
-        const textarea = document.createElement('textarea')
-        textarea.value = text
-        document.body.appendChild(textarea)
-        textarea.select()
-        document.execCommand('copy')
-        document.body.removeChild(textarea)
-      }
-    }
-  },
-  watch: {
-    inputText: {
-      handler: 'calculateHashes',
-      immediate: true
-    }
+// 支持的哈希算法
+const hashAlgorithms = {
+  md5: CryptoJS.MD5,
+  sha1: CryptoJS.SHA1,
+  sha256: CryptoJS.SHA256,
+  sha512: CryptoJS.SHA512
+}
+
+// 执行命令
+function executeCommand() {
+  const command = currentCommand.value.trim()
+  if (!command) return
+  
+  // 显示命令
+  addOutput(`hash-tool:~$ ${command}`)
+  
+  // 添加命令到历史记录
+  addToHistory(command)
+  
+  // 处理命令
+  const [cmd, ...args] = command.split(' ')
+  
+  switch (cmd.toLowerCase()) {
+    case 'hash':
+      calculateHash(args)
+      break
+    case 'help':
+      showHelp()
+      break
+    case 'clear':
+      clearTerminal()
+      break
+    case 'back':
+    case 'exit':
+      addOutput('返回主终端...', 'info')
+      setTimeout(() => {
+        router.push('/')
+      }, 500)
+      break
+    default:
+      addOutput(`命令未找到: ${cmd}`, 'error')
+      showHelp()
+  }
+  
+  // 清空当前命令
+  currentCommand.value = ''
+  
+  // 滚动到底部
+  scrollToBottom()
+}
+
+// 计算哈希值
+function calculateHash(args) {
+  if (args.length < 2) {
+    addOutput('错误: 用法: hash [算法] [文本] 或 hash all [文本]', 'error')
+    return
+  }
+
+  const algorithm = args[0].toLowerCase()
+  const text = args.slice(1).join(' ')
+
+  if (!text) {
+    addOutput('错误: 请输入要计算哈希的文本', 'error')
+    return
+  }
+
+  if (algorithm === 'all') {
+    // 计算所有算法
+    addOutput(`计算所有哈希值: "${text}"`, 'success')
+    Object.entries(hashAlgorithms).forEach(([algoName, algoFunc]) => {
+      const hash = algoFunc(text).toString()
+      addOutput(`  ${algoName.toUpperCase()}: ${hash}`, 'info')
+    })
+  } else if (hashAlgorithms[algorithm]) {
+    // 计算指定算法
+    const hash = hashAlgorithms[algorithm](text).toString()
+    addOutput(`${algorithm.toUpperCase()}("${text}"): ${hash}`, 'success')
+  } else {
+    addOutput(`错误: 不支持的算法 "${algorithm}"`, 'error')
+    addOutput('支持的算法: md5, sha1, sha256, sha512, all', 'info')
   }
 }
+
+// 显示帮助信息
+function showHelp() {
+  addOutput('哈希计算工具命令:', 'info')
+  addOutput('  hash [算法] [文本] - 计算指定算法的哈希值', 'info')
+  addOutput('  hash all [文本]    - 计算所有算法的哈希值', 'info')
+  addOutput('  支持的算法:', 'info')
+  addOutput('    md5              - MD5 哈希', 'info')
+  addOutput('    sha1             - SHA-1 哈希', 'info')
+  addOutput('    sha256           - SHA-256 哈希', 'info')
+  addOutput('    sha512           - SHA-512 哈希', 'info')
+  addOutput('    all              - 所有算法', 'info')
+  addOutput('  help              - 显示帮助信息', 'info')
+  addOutput('  back/exit         - 返回主终端', 'info')
+}
+
+// 清空终端输出
+function clearTerminal() {
+  const output = document.getElementById('hash-output')
+  if (output) {
+    output.innerHTML = ''
+  }
+}
+
+// 添加输出到终端
+function addOutput(text, type = 'normal') {
+  const output = document.getElementById('hash-output')
+  if (output) {
+    const div = document.createElement('div')
+    div.className = type
+    div.textContent = text
+    output.appendChild(div)
+  }
+}
+
+// 滚动到底部
+function scrollToBottom() {
+  nextTick(() => {
+    const terminal = document.querySelector('.terminal-tool')
+    if (terminal) {
+      terminal.scrollTop = terminal.scrollHeight
+    }
+  })
+}
+
+// 历史记录导航 - 向上
+function navigateHistoryUp() {
+  if (commandHistory.value.length === 0) return
+  
+  if (historyIndex.value < commandHistory.value.length - 1) {
+    historyIndex.value++
+  }
+  currentCommand.value = commandHistory.value[commandHistory.value.length - 1 - historyIndex.value]
+}
+
+// 历史记录导航 - 向下
+function navigateHistoryDown() {
+  if (commandHistory.value.length === 0) return
+  
+  if (historyIndex.value > 0) {
+    historyIndex.value--
+    currentCommand.value = commandHistory.value[commandHistory.value.length - 1 - historyIndex.value]
+  } else {
+    historyIndex.value = -1
+    currentCommand.value = ''
+  }
+}
+
+// 添加命令到历史记录
+function addToHistory(command) {
+  if (command && command.trim()) {
+    commandHistory.value.push(command.trim())
+    // 限制历史记录长度
+    if (commandHistory.value.length > 50) {
+      commandHistory.value.shift()
+    }
+    historyIndex.value = -1
+  }
+}
+
+// 处理粘贴事件
+function handlePaste(event) {
+  // 获取粘贴的文本内容
+  const pastedText = event.clipboardData.getData('text')
+  if (pastedText) {
+    // 将粘贴的文本添加到当前命令中
+    currentCommand.value += pastedText
+    // 阻止默认的粘贴行为，因为我们手动处理了
+    event.preventDefault()
+  }
+}
+
 </script>
 
 <style scoped>
-.hash-service {
-  padding: 20px;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.input-section textarea {
-  width: 100%;
-  min-height: 120px;
+.terminal-tool {
+  font-family: 'Courier New', Monaco, monospace;
+  background-color: #000000;
+  color: #00ff00;
   padding: 10px;
-  border-radius: 4px;
-  border: 1px solid var(--border-color, #ccc);
-  resize: vertical;
-  font-family: monospace;
-  font-size: 14px;
-  line-height: 1.4;
+  height: 100vh;
+  overflow: auto;
 }
 
-.result-section {
-  border-top: 1px solid var(--border-color);
-  padding-top: 20px;
-}
-
-.result-item {
+.command-line {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.prompt {
+  color: #00ff00;
+  margin-right: 5px;
+  white-space: nowrap;
+}
+
+.input-container {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.command-input {
+  background: transparent;
+  border: none;
+  color: #00ff00;
+  font-family: inherit;
+  font-size: inherit;
+  outline: none;
+  width: 100%;
+  caret-color: #00ff00;
+}
+
+.command-input::placeholder {
+  color: #008800;
+}
+
+.cursor {
+  animation: blink 1s step-end infinite;
+  background-color: #00ff00;
+  width: 8px;
+  height: 1em;
+  display: inline-block;
+  position: absolute;
+  right: 0;
+  pointer-events: none;
+}
+
+.output {
   margin-bottom: 10px;
   line-height: 1.4;
 }
 
-.result-label {
-  width: 100px;
-  font-weight: bold;
-}
-
-.result-value {
-  flex: 1;
-  padding: 6px 10px;
-  background-color: var(--card-background, #f5f5f5);
-  border-left: 4px solid var(--primary-color, #42b983);
-  word-break: break-all;
-  border-radius: 0 4px 4px 0;
-  font-family: monospace;
-  font-size: 14px;
-  line-height: 1.3;
-}
-
-.copy-btn {
-  margin-left: 10px;
-  padding: 6px 10px;
-  background-color: var(--primary-color, #42b983);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.copy-btn:hover {
-  background-color: var(--primary-hover, #369f77);
-}
-
-/* 夜间模式支持 */
-@media (prefers-color-scheme: dark) {
-  .result-value {
-    color: #e0e0e0;
-    background-color: #2d2d2d;
-  }
-
-  .input-section textarea {
-    background-color: #2d2d2d;
-    color: #e0e0e0;
-    border-color: #444;
-  }
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
 }
 </style>

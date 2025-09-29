@@ -1,16 +1,30 @@
 <script setup>
-import { inject } from 'vue'
+import { ref, onMounted } from 'vue'
 import { NButton, NIcon, useMessage, NTooltip } from 'naive-ui'
 import { Moon, Sun } from '@vicons/tabler'
 
-// 注入主题状态与切换函数
-const isDark = inject('isDark')
-const toggleDark = inject('toggleDark')
+// 主题状态
+const isDark = ref(true)
 
-// 切换主题按钮事件
-const handleClick = () => {
-  toggleDark()
+// 切换主题
+function toggleTheme() {
+  isDark.value = !isDark.value
+  // 更新全局样式
+  if (isDark.value) {
+    document.documentElement.style.setProperty('--bg-color', '#000000')
+    document.documentElement.style.setProperty('--text-color', '#00ff00')
+  } else {
+    document.documentElement.style.setProperty('--bg-color', '#ffffff')
+    document.documentElement.style.setProperty('--text-color', '#000000')
+  }
 }
+
+// 组件挂载时同步主题
+onMounted(() => {
+  // 检查当前主题状态
+  const currentBgColor = getComputedStyle(document.documentElement).getPropertyValue('--bg-color').trim()
+  isDark.value = currentBgColor === '#000000' || currentBgColor === 'rgb(0, 0, 0)'
+})
 </script>
 
 <template>
@@ -23,7 +37,7 @@ const handleClick = () => {
     </router-link>
     <n-tooltip trigger="hover" >
       <template #trigger>
-        <n-button @click="handleClick" quaternary circle class="theme-toggle-button">
+        <n-button @click="toggleTheme" quaternary circle class="theme-toggle-button">
           <n-icon size="24">
             <component :is="isDark ? Sun : Moon" />
           </n-icon>

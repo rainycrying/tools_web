@@ -1,11 +1,11 @@
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
+  font-family: 'Courier New', Monaco, 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', monospace;
+  line-height: 1.2;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color-scheme: dark;
+  color: #00ff00; /* 终端绿色 */
+  background-color: #000000; /* 终端黑色 */
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -13,67 +13,121 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* 移除所有现代UI样式 */
 a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+  color: #00ff00;
+  text-decoration: none;
 }
 a:hover {
-  color: #535bf2;
+  color: #00cc00;
 }
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
+  padding: 0;
+  display: block;
+  min-width: 100vw;
   min-height: 100vh;
+  background-color: #000000;
+  overflow: hidden;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+h1, h2, h3, h4, h5, h6 {
+  font-family: inherit;
+  color: #00ff00;
+  margin: 0.5em 0;
 }
 
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
+  border: 1px solid #00ff00;
+  padding: 0.4em 0.8em;
+  font-size: 0.9em;
+  font-weight: normal;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: transparent;
+  color: #00ff00;
   cursor: pointer;
-  transition: border-color 0.25s;
 }
 button:hover {
-  border-color: #646cff;
+  background-color: #003300;
 }
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-.card {
-  padding: 2em;
+button:focus {
+  outline: 1px solid #00ff00;
 }
 
 #app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  background-color: #000000;
+  overflow: hidden;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+/* 终端特定样式 */
+.terminal {
+  background-color: #000000;
+  color: #00ff00;
+  font-family: 'Courier New', Monaco, monospace;
+  padding: 10px;
+  height: 100vh;
+  overflow: auto;
+}
+
+.command-line {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.prompt {
+  color: #00ff00;
+  margin-right: 5px;
+}
+
+.command-input {
+  background: transparent;
+  border: none;
+  color: #00ff00;
+  font-family: inherit;
+  font-size: inherit;
+  outline: none;
+  flex: 1;
+}
+
+.output {
+  color: #00ff00;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.error {
+  color: #ff0000;
+}
+
+.success {
+  color: #00ff00;
+}
+
+.warning {
+  color: #ffff00;
+}
+
+.info {
+  color: #00ffff;
+}
+
+/* 光标闪烁动画 */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.cursor {
+  animation: blink 1s step-end infinite;
+  background-color: #00ff00;
+  width: 8px;
+  height: 1em;
+  display: inline-block;
+  vertical-align: middle;
 }
